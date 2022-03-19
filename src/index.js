@@ -56,21 +56,22 @@ puppeteer
         rl.on('line', (line) => {
           if (line !== '') {
             let modifiedLine = line
-              .toLowerCase()
+
               .normalize('NFD')
               .replace(/[\u0300-\u036f]/g, '')
             let nameArr = modifiedLine.split(' ')
             let name = ''
             for (let i = 0; i < nameArr.length; i++) {
-              if (nameArr[i].match(/[A-Z][A-Z]/)) {
+              if (nameArr[i].match(/^[A-Z]{2}$/g)) {
                 name += `${nameArr[i][0]}.${nameArr[i][1]}. `
               } else {
                 name += `${nameArr[i]} `
               }
             }
-            name = name.trim()
-
-            arr.push(name)
+            name = name.trim().toLowerCase()
+            if (!arr.includes(name)) {
+              arr.push(name)
+            }
           }
         })
 
@@ -81,7 +82,7 @@ puppeteer
 
       fightersArr = await p()
     }
-
+    console.log(fightersArr)
     let fighterJSON = []
     // await page.close()
     // page = await browser.newPage()
@@ -141,17 +142,7 @@ puppeteer
                   }
                 }
               }
-              // for (let j = 0; j < arr.length; ++j) {
-              //   if (arr[j].name.toLowerCase() === fighterNameMatch) {
-              //     return {
-              //       flag: true,
-              //       pagination: null,
-              //       href: arr[j],
-              //       fighterNameMatch,
-              //       skip: false,
-              //     }
-              //   }
-              // }
+
               let pagination = arr.find((item) => {
                 if (item.name === 'next »') {
                   return item.href
@@ -201,11 +192,12 @@ puppeteer
               'span[itemprop="memberOf"]'
             ).innerText
 
-            let weightClass = document
-              .querySelector('.association-class')
-              .innerText.split('\n')
-              .pop()
-
+            let weightClassArr = [
+              ...document
+                .querySelector('.association-class')
+                .querySelectorAll('a'),
+            ]
+            let weightClass = weightClassArr.pop().innerText
             let totalWin = document.querySelector(
               '.win span:nth-child(2)'
             ).innerText
